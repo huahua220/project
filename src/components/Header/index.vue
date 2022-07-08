@@ -46,9 +46,16 @@
 export default {
     data(){
         return{
-            keyword:'',
+            keyword:'', 
         }
     },
+    mounted(){
+        //通过全局事件总线清楚关键字
+        this.$bus.$on('clear',()=>{
+            this.keyword=''
+        })
+    },
+
     methods:{
         goSearch(){
             //路由传参

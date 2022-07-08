@@ -4,7 +4,7 @@
       <div class="fl key brand">品牌</div>
       <div class="value logos">
         <ul class="logo-list">
-          <li v-for="val in trademarkList" :key="val.tmId">{{val.tmName}}</li>
+          <li v-for="val in trademarkList" :key="val.tmId" @click="tradeMarkHandler(val)">{{val.tmName}}</li>
         </ul>
       </div>
       <div class="ext">
@@ -12,12 +12,12 @@
         <a href="javascript:void(0);">更多</a>
       </div>
     </div>
-    <div class="type-wrap" v-for="val in attrsList" :key="val.attrId" >
-      <div class="fl key">{{val.attrName}}</div>
+    <div class="type-wrap" v-for="attrBig in attrsList" :key="attrBig.attrId" >
+      <div class="fl key">{{attrBig.attrName}}</div>
       <div class="fl value">
         <ul class="type-list">
-          <li v-for="(val2,index) in val.attrValueList" :key="index">
-            <a>{{val2}}</a>
+          <li v-for="(attrSmall,index) in attrBig.attrValueList" :key="index" @click="attrInfo(attrBig.attrId,attrSmall,attrBig.attrName)">
+            <a>{{attrSmall}}</a>
           </li>
         </ul>
       </div>
@@ -34,6 +34,18 @@
 
     computed:{
       ...mapGetters(['trademarkList','attrsList'])
+    },
+
+    methods:{
+      //品牌的事件处理函数
+      tradeMarkHandler(val){
+        //触发自定义事件，子向父传递数据
+        this.$emit('trademarkInfo',val)
+      },
+      attrInfo(attrBigId,attrSmallName,attrBigName){
+        console.log(attrBigId,attrSmallName,attrBigName)
+        this.$emit('attrInfo',attrBigId,attrSmallName,attrBigName)
+      }
     }
 
   }

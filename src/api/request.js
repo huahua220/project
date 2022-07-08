@@ -3,6 +3,7 @@ import axios from "axios";
 //引入进度条
 import nProgress from "nprogress";
 import "nprogress/nprogress.css"
+import store from '@/store'
 //start:进度条开始 done：进度条结束
 // console.log(nProgress)
 const requests=axios.create({
@@ -15,6 +16,8 @@ const requests=axios.create({
 requests.interceptors.request.use(function (config) {
     // 在发送请求之前做些什么
     //config:配置对象，对象里面有一个属性很重要，headers请求头
+    // console.log(store)
+    config.headers.userTempId=store.state.detail.uuidToken
     //进度条开始动
     nProgress.start()
     return config;

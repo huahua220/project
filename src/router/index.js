@@ -7,6 +7,9 @@ import Home from '@/pages/Home'
 import Search from '@/pages/Search'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
+import Detail from '@/pages/Detail'
+import AddCartSuccess from '@/pages/AddCartSuccess'
+import ShopCart from '@/pages/ShopCart'
 
 //保留一份
 let originPush=VueRouter.prototype.push;
@@ -30,6 +33,20 @@ VueRouter.prototype.replace=function(location,resolve,reject){
 
 export default new VueRouter({
     routes:[
+        {
+            path:'/shopCart',
+            component:ShopCart
+        },
+        {
+            path:'/addcartsuccess',
+            component:AddCartSuccess,
+            meta:{show:true},
+            name:'addcartsuccess'
+        },
+        {
+            path:'/details/:skuId',
+            component:Detail
+        },
         {
             path:'/home',
             component:Home,
@@ -57,6 +74,11 @@ export default new VueRouter({
         {
             path:'/',
             redirect:'/home'
-        }
-    ]
+        },
+      
+    ],
+    scrollBehavior(to, from, savedPosition) {
+        // 始终滚动到顶部
+        return { y: 0 }
+      },
 })

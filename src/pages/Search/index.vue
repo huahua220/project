@@ -11,38 +11,28 @@
             </li>
           </ul>
           <ul class="fl sui-tag">
-            <li class="with-x">手机</li>
-            <li class="with-x">iphone<i>×</i></li>
-            <li class="with-x">华为<i>×</i></li>
-            <li class="with-x">OPPO<i>×</i></li>
+            <li class="with-x" v-if="searchParams.categoryName">{{searchParams.categoryName}}<i @click="removeCategoryName">×</i></li>
+            <li class="with-x" v-if="searchParams.keyword">{{searchParams.keyword}}<i @click="removeKeyword">×</i></li>
+            <li class="with-x" v-if="searchParams.trademark">{{searchParams.trademark.split(":")[1]}}<i @click="removeTrademark">×</i></li>
+            <li class="with-x" v-for="(attr,index) in searchParams.props" :key="index">{{attr.split(":")[1]}}<i @click="removeAttr(index)">×</i></li>
+            
           </ul>
         </div>
 
         <!--selector-->
-        <SearchSelector />
+        <SearchSelector @trademarkInfo='trademarkInfo' @attrInfo='attrInfo'/>
 
         <!--details-->
         <div class="details clearfix">
           <div class="sui-navbar">
             <div class="navbar-inner filter">
               <ul class="sui-nav">
-                <li class="active">
-                  <a href="#">综合</a>
+                <li :class="{active:searchParams.order.indexOf('1')!=-1}" @click="changeOrder(1)">
+                  <a>综合<span v-show="searchParams.order.indexOf('1')!=-1" >{{searchParams.order.indexOf('asc')!=-1?'↑':'↓'}}</span></a>
                 </li>
-                <li>
-                  <a href="#">销量</a>
-                </li>
-                <li>
-                  <a href="#">新品</a>
-                </li>
-                <li>
-                  <a href="#">评价</a>
-                </li>
-                <li>
-                  <a href="#">价格⬆</a>
-                </li>
-                <li>
-                  <a href="#">价格⬇</a>
+               
+                <li  :class="{active:searchParams.order.indexOf('2')!=-1}" @click="changeOrder(2)">
+                  <a>价格<span v-show="searchParams.order.indexOf('2')!=-1">{{searchParams.order.indexOf('desc')!=-1?'↓':'↑'}}</span></a>
                 </li>
               </ul>
             </div>
@@ -52,7 +42,8 @@
               <li class="yui3-u-1-5" v-for="val in goodsList" :key="val.id">
                 <div class="list-wrap">
                   <div class="p-img">
-                    <a href="item.html" target="_blank"><img :src="val.defaultImg" /></a>
+                    <router-link :to="`/details/${val.id}`"><img :src="val.defaultImg"></router-link>
+                    <!-- <a href="item.html" target="_blank"><img :src="val.defaultImg" /></a> -->
                   </div>
                   <div class="price">
                     <strong>
@@ -75,35 +66,8 @@
         
             </ul>
           </div>
-          <div class="fr page">
-            <div class="sui-pagination clearfix">
-              <ul>
-                <li class="prev disabled">
-                  <a href="#">«上一页</a>
-                </li>
-                <li class="active">
-                  <a href="#">1</a>
-                </li>
-                <li>
-                  <a href="#">2</a>
-                </li>
-                <li>
-                  <a href="#">3</a>
-                </li>
-                <li>
-                  <a href="#">4</a>
-                </li>
-                <li>
-                  <a href="#">5</a>
-                </li>
-                <li class="dotted"><span>...</span></li>
-                <li class="next">
-                  <a href="#">下一页»</a>
-                </li>
-              </ul>
-              <div><span>共10页&nbsp;</span></div>
-            </div>
-          </div>
+          <!-- 分页器 -->
+          <Pagination :pageNo="searchParams.pageNo" :pageSize="searchParams.pageSize" :total="total" :continues="5" :totalPages="totalPages" @getPageNo="getPageNo"></Pagination>
         </div>
       </div>
     </div>
@@ -112,12 +76,14 @@
 
 <script>
   import SearchSelector from './SearchSelector/SearchSelector'
-  import {mapGetters} from 'vuex'
+  import {mapGetters,mapState} from 'vuex'
+import Pagination from '../../components/Pagination/index.vue'
   export default {
     name: 'Search',
     components: {
-      SearchSelector
-    },
+    SearchSelector,
+    Pagination
+},
     data(){
       return{
         searchParams: {
@@ -126,7 +92,7 @@
           "category3Id": "",
           "categoryName": "",
           "keyword": "",
-          "order": "",
+          "order": "1:desc",
           "pageNo": 1,
           "pageSize": 3,
           "props": [],
@@ -147,15 +113,105 @@
       this.getData()
     },
 
+    watch:{
+      //监听路由属性有没有发生变化，如发生变化，再次发起请求
+      $route(newValue,oldValue){
+        //再次整理数据给服务器
+        Object.assign(this.searchParams,this.$route.query,this.$route.params)
+        this.getData()
+        // console.log(this.searchParams)
+        this.searchParams.category1Id=''
+        this.searchParams.category2Id=''
+        this.searchParams.category3Id=''
+      }
+    },
+
+
     computed:{
       //mapGetters里面的写法：传递的数组，因为getters计算是没有划分模块
-      ...mapGetters(['goodsList'])
+      ...mapGetters(['goodsList']),
+
+      ...mapState({
+        total:(state)=>{
+          return state.search.searchInfo.total
+        },
+        totalPages:(state)=>{
+          return state.search.searchInfo.totalPages
+        }
+      })
     },
 
     methods:{
       //向服务器发请求获取search模块数据（根据参数不同返回不同的数据进行展示）
       getData(){
           this.$store.dispatch('getSearchInfo',this.searchParams)
+      },
+      removeCategoryName(){
+        this.searchParams.categoryName=''
+        this.searchParams.category1Id=''
+        this.searchParams.category2Id=''
+        this.searchParams.category3Id=''
+         this.getData()
+         if(this.$route.params){
+          this.$router.push({name:'search',params:this.$route.params})
+         }
+      },
+      removeKeyword(){
+        this.searchParams.keyword=''
+        this.getData()
+        //通知兄弟组件Header清楚关键字
+        this.$bus.$emit('clear')
+        if(this.$route.query){
+          this.$router.push({name:'search',query:this.$route.query})
+        }
+      },
+      removeTrademark(){
+        this.searchParams.trademark=''
+        this.getData()
+      },
+      removeAttr(index){
+        // alert(index)
+        this.searchParams.props.splice(index,1)
+        this.getData()
+      },
+      //自定义事件的回调
+      trademarkInfo(trademark){
+        // console.log(trademark)
+        //拿到子组件的数据，整合发请求
+        this.searchParams.trademark=`${trademark.tmId}:${trademark.tmName}`
+        this.getData()
+      },
+      attrInfo(attrBigId,attrSmallName,attrBigName){
+        // console.log('父组件',attrBigId,attrSmallName,attrBigName)
+        let props=`${attrBigId}:${attrSmallName}:${attrBigName}`
+        if(this.searchParams.props.indexOf(props)==-1){
+          this.searchParams.props.push(props)
+        }
+        this.getData()
+      },
+      changeOrder(flag){
+        //flag:1代表点的综合，2代表点的价格
+        console.log(flag)
+        let originalFlag=this.searchParams.order.split(':')[0]
+        let originalSort=this.searchParams.order.split(':')[1]
+        // console.log(originalFlag,originalSort)
+        let newOrder=''
+        if(flag==originalFlag){
+          //要取反箭头
+          newOrder=`${originalFlag}:${originalSort.indexOf('desc')!=-1?'asc':'desc'}`
+        }else{
+          //要取反1.2，箭头默认降序
+          newOrder=`${flag}:${'desc'}`
+        }
+        this.searchParams.order=newOrder
+        this.getData()
+
+      },
+      //自定义事件的回调
+      getPageNo(pageNo){
+        // console.log(pageNo)
+        this.searchParams.pageNo=pageNo
+        this.getData()
       }
     }
   }
