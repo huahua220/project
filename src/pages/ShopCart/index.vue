@@ -13,7 +13,7 @@
       <div class="cart-body">
         <ul class="cart-list" v-for="good in cartInfoList" :key="good.id">
           <li class="cart-list-con1">
-            <input type="checkbox" name="chk_list">
+            <input type="checkbox" name="chk_list" :checked="good.isChecked" @click="changeChecked(good)">
           </li>
           <li class="cart-list-con2">
             <img :src="good.imgUrl">
@@ -26,15 +26,15 @@
             <span class="price">{{good.skuPrice}}</span>
           </li>
           <li class="cart-list-con5">
-            <a href="javascript:void(0)" class="mins" >-</a>
-            <input autocomplete="off" type="text" v-model="good.skuNum" minnum="1" class="itxt" >
-            <a href="javascript:void(0)" class="plus">+</a>
+            <a href="javascript:void(0)" class="mins" @click="changeNum('mius',good)">-</a>
+            <input autocomplete="off" type="text" :value="good.skuNum" minnum="1" class="itxt" @change="changeNum('text',good,$event)">
+            <a href="javascript:void(0)" class="plus" @click="changeNum('add',good)">+</a>
           </li>
           <li class="cart-list-con6">
             <span class="sum">{{good.skuPrice*good.skuNum}}</span>
           </li>
           <li class="cart-list-con7">
-            <a href="#none" class="sindelet">删除</a>
+            <a href="#none" class="sindelet" @click="del(good)">删除</a>
             <br>
             <a href="#none">移到收藏</a>
           </li>
@@ -43,11 +43,11 @@
     </div>
     <div class="cart-tool">
       <div class="select-all">
-        <input class="chooseAll" type="checkbox">
+        <input class="chooseAll" type="checkbox" :checked="ALLCHECKED" @click="quanXuan">
         <span>全选</span>
       </div>
       <div class="option">
-        <a href="#none">删除选中的商品</a>
+        <a @click="delAllGoods">删除选中的商品</a>
         <a href="#none">移到我的关注</a>
         <a href="#none">清除下柜商品</a>
       </div>
@@ -56,7 +56,7 @@
           <span>0</span>件商品</div>
         <div class="sumprice">
           <em>总价（不含运费） ：</em>
-          <i class="summoney">0</i>
+          <i class="summoney">{{sumMoney}}</i>
         </div>
         <div class="sumbtn">
           <a class="sum-btn" href="###" target="_blank">结算</a>
@@ -71,14 +71,118 @@
   export default {
     name: 'ShopCart',
     mounted(){
-      this.$store.dispatch('getCartList')
+      this.getData()
     },
-    
+    methods:{
+     async delAllGoods(){
+        try {
+          await this.$store.dispatch('delAllCheckedGoods')
+          this.getData()
+        } catch (error) {
+          alert(error)
+        }
+       
+      },
+      //删除商品
+      async del(good){
+        try {
+          let res=await this.$store.dispatch('deleteGood',good.skuId)
+          // console.log(res)
+          this.getData()
+        } catch (error) {
+          alert(error)
+        }
+      },
+
+     async quanXuan(event){
+        let ischecked=event.target.checked==true?1:0
+        try {
+         await this.$store.dispatch('allCheckedGoodes',ischecked)
+         this.getData()
+        } catch (error) {
+          alert(error)
+        }
+        
+     
+      },
+
+      //修改商品选中状态
+     async changeChecked(good){
+        if(good.isChecked==1){
+          good.isChecked=0
+        }else{
+          good.isChecked=1
+        }
+          // console.log(good.isChecked)
+          try {
+            await this.$store.dispatch('ChangeChecked',{skuId:good.skuId,isChecked:good.isChecked})
+            this.getData()
+          } catch (error) {
+            alert(error)
+          }
+      },
+
+      //修改数量
+      async changeNum(type,good,event){
+      
+       if(type=='add'){
+        
+          await this.$store.dispatch('addOrUpdateShopCart',{skuId:good.skuId,skuNum:'1'})
+          this.getData()
+       }
+       if(type=='mius'){
+          if(good.skuNum>1){
+              await this.$store.dispatch('addOrUpdateShopCart',{skuId:good.skuId,skuNum:'-1'})
+              this.getData()
+          }
+       }
+       if(type=='text'){
+          let newNum=event.target.value
+          let skuNum=newNum-good.skuNum
+          // console.log(skuNum)
+           await this.$store.dispatch('addOrUpdateShopCart',{skuId:good.skuId,skuNum:skuNum})
+           this.getData()
+       }
+        
+      },
+
+      getData(){
+        this.$store.dispatch('getCartList')
+      }
+    },
+
     computed:{
          ...mapGetters(['cartList']),
          cartInfoList(){
             return this.cartList.cartInfoList||[]
-         }
+         },
+
+        //动态绑定全选按钮
+         ALLCHECKED(){
+         return this.cartInfoList.every(item=>{
+            // console.log(item)
+            return item.isChecked==1
+          })
+         },
+
+          //过滤出ischenked==1的商品
+         ischeckedList(){
+          return this.cartInfoList.filter(item=>{
+            return item.isChecked==1
+          })
+         },
+
+        //所有勾选商品总价
+        sumMoney(){
+          let sum=0
+           this.ischeckedList.forEach(element => {
+            sum+=element.skuPrice*element.skuNum
+          });
+          return sum
+        }
+          
+
+       
       
     }
   }

@@ -36,3 +36,13 @@ export const reqaddOrUpdateShopCart=(skuId,skuNum)=>{
 export const reqgetCartList=()=>{
     return requests({url:'/cart/cartList',method:'get'})
 }
+
+//切换商品选中状态
+export const reqChangeChecked=(skuId,isChecked)=>{
+    return requests({url:`/cart/checkCart/${skuId}/${isChecked}`,method:'get'})
+}
+
+//删除商品
+export const reqdeleteGood=(skuId)=>{
+    return requests({url:`/cart/deleteCart/${skuId}`,method:'DELETE'})
+}
