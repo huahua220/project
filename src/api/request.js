@@ -18,6 +18,7 @@ requests.interceptors.request.use(function (config) {
     //config:配置对象，对象里面有一个属性很重要，headers请求头
     // console.log(store)
     config.headers.userTempId=store.state.detail.uuidToken
+    config.headers.token=store.state.register.token
     //进度条开始动
     nProgress.start()
     return config;

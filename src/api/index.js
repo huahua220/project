@@ -46,3 +46,23 @@ export const reqChangeChecked=(skuId,isChecked)=>{
 export const reqdeleteGood=(skuId)=>{
     return requests({url:`/cart/deleteCart/${skuId}`,method:'DELETE'})
 }
+
+//获取验证码
+export const reqgetYZM=(phone)=>{
+   return requests({url:`/user/passport/sendCode/${phone}`,method:'get'})
+}
+
+//注册用户
+export const reqgetUserRegister=(data)=>{
+    return requests({url:'/user/passport/register',method:'POST',data})
+}
+
+//用户登录
+export const reqUserLogin=(data)=>{
+    return requests({url:'/user/passport/login',method:'POST',data})
+}
+
+//添加了token校验获取用户登录信息
+export const reqgetUserInfo=()=>{
+    return requests({url:'/user/passport/auth/getUserInfo',method:'get'})
+}

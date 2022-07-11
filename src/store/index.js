@@ -7,6 +7,7 @@ import home from './home'
 import search from './search'
 import detail from './detail'
 import cartList from './cartList'
+import register  from './register'
 
 
 //对外暴露Store类的一个实力
@@ -15,6 +16,7 @@ export default new Vuex.Store({
         home,
         search,
         detail,
-        cartList
+        cartList,
+        register
     }
 })
